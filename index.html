@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#101522" />
+  <meta name="theme-color" content="#0a0e16" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Arcana Tap" />
@@ -15,8 +15,11 @@
   <div class="app-bg"></div>
   <main class="app">
     <header class="topbar">
-      <h1>Arcana Tap</h1>
-      <button id="resetRunBtn" class="ghost">Nueva Run</button>
+      <div>
+        <h1>Arcana Tap</h1>
+        <p class="prestige-bar" id="prestigeBar"></p>
+      </div>
+      <button id="resetRunBtn" class="btn-reset">⟲</button>
     </header>
 
     <section class="stats-grid">
@@ -25,7 +28,7 @@
         <strong id="gold">0</strong>
       </article>
       <article class="stat-card">
-        <p>Daño por toque</p>
+        <p>Golpe</p>
         <strong id="tapDamage">1</strong>
       </article>
       <article class="stat-card">
@@ -33,40 +36,73 @@
         <strong id="dps">0</strong>
       </article>
       <article class="stat-card">
-        <p>Fragmentos</p>
+        <p>Esencias</p>
         <strong id="shards">0</strong>
+      </article>
+      <article class="stat-card">
+        <p>Prestige</p>
+        <strong id="prestige">0</strong>
+      </article>
+      <article class="stat-card">
+        <p>Reliquias</p>
+        <strong id="relicCount">0</strong>
       </article>
     </section>
 
     <section class="enemy-panel">
       <div class="enemy-headline">
-        <h2 id="enemyName">Enemigo: Slime del Sótano</h2>
-        <span id="stageLabel">Sala 1</span>
+        <div>
+          <h2 id="enemyName">Enemigo: Slime del Sótano</h2>
+          <p id="enemyMods" class="enemy-mods"></p>
+        </div>
+        <span id="stageLabel" class="stage-label">Sala 1</span>
       </div>
       <div class="hp-wrap">
         <div id="hpBar" class="hp-bar"></div>
       </div>
       <p id="hpText" class="hp-text">100 / 100</p>
-      <button id="attackBtn" class="attack-btn">TOCAR PARA ATACAR</button>
+      <button id="attackBtn" class="attack-btn">
+        <span class="attack-text">GOLPEAR</span>
+        <span class="attack-sub" id="damagePreview">+1</span>
+      </button>
       <p id="floatingLog" class="floating-log"></p>
     </section>
 
-    <section class="shop">
-      <h3>Tienda del Run</h3>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="shop">Tienda</button>
+      <button class="tab-btn" data-tab="relics">Reliquias</button>
+      <button class="tab-btn" data-tab="meta">Taller</button>
+    </div>
+
+    <section class="tab-content active" data-tab="shop">
+      <h3>Mejoras de Run</h3>
       <div class="shop-grid" id="shopGrid"></div>
     </section>
 
-    <section class="meta">
-      <h3>Taller Permanente</h3>
+    <section class="tab-content" data-tab="relics">
+      <h3>Reliquias Activas</h3>
+      <div id="activeRelics" class="active-relics"></div>
+    </section>
+
+    <section class="tab-content" data-tab="meta">
+      <h3>Taller Permanente (Esencias)</h3>
       <div class="shop-grid" id="metaGrid"></div>
     </section>
   </main>
 
   <dialog id="relicDialog" class="relic-dialog">
     <form method="dialog" class="relic-form">
-      <h3>Elige 1 reliquia</h3>
-      <p>Como en un roguelite: bonus potente para esta run.</p>
+      <h3>⭐ Elige 1 Reliquia</h3>
+      <p id="relicSubtitle"></p>
       <div id="relicChoices" class="relic-choices"></div>
+    </form>
+  </dialog>
+
+  <dialog id="eventDialog" class="event-dialog">
+    <form method="dialog" class="event-form">
+      <h3 id="eventTitle"></h3>
+      <p id="eventDesc"></p>
+      <div id="eventChoices" class="event-choices"></div>
     </form>
   </dialog>
 

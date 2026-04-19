@@ -1,30 +1,75 @@
-# Arcana Tap (iPhone sin Unity)
+# Arcana Tap - Roguelite Clicker (iPhone sin Unity)
 
-Juego clicker roguelite en HTML/CSS/JS puro.
-Inspirado en la progresion de runs tipo Balatro/Isaac, pero en formato simple y rapido para movil.
+Juego clicker roguelite completo en HTML/CSS/JS puro. Progresión tipo **Balatro/Isaac** adaptada a tapping en móvil.
 
-## Como probarlo en PC
+## ✨ Características v2
 
-1. Abre la carpeta en VS Code.
-2. Abre `index.html` directamente en el navegador.
-3. Opcional recomendado: usa una extension de "Live Server" para recarga rapida.
+### Mecánicas Principales
+- **Tapping** de enemigos con daño escalable
+- **Reliquias** (12+) con sinergias reales: daño, DPS, oro, crítico
+- **Eventos aleatorios** que alteran la run (encuentros, portales)
+- **Modificadores de enemigos**: Acelerado, Blindado, Regenerador, Explosivo
+- **Sistema de Prestigio**: canjea kills por bonificaciones permanentes
+- **Guardado automático** cada 3 segundos
 
-## Como usarlo en iPhone
+### Progresión
+- 4 mejoras de run por sala (Cuchilla, Familiar, Cáliz, Espejo)
+- 4 mejoras permanentes con Esencias (daño, DPS, crítico, oro)
+- Reliquias cada 6 salas
+- Eventos cada 8 salas (~60% probabilidad)
+- Enemigos progresivamente más fuertes
 
-1. Sube esta carpeta a GitHub.
-2. Publicala con GitHub Pages (Settings > Pages).
-3. Abre la URL en Safari en iPhone.
-4. Pulsa Compartir > Anadir a pantalla de inicio.
-5. Listo: se abre casi como app nativa.
+### UI/UX Mejorada
+- **Tabs**: Tienda, Reliquias Activas, Taller Permanente
+- **Stats en tiempo real**: oro, daño, DPS, esencias, prestige, contador de reliquias
+- **Previsualización de daño** en botón de ataque
+- **Hit detection mejorada** (botones con 44px mínimo, padding mayor)
+- **Visual refrescante**: gradientes, animaciones, colores vibrantes
+- Diseño **fullscreen en iPhone** (PWA)
 
-## Mecánicas actuales
+## 🚀 Cómo jugar
 
-- Tocar para atacar enemigos por salas.
-- Oro para comprar mejoras de run.
-- Reliquias aleatorias cada 7 salas.
-- Fragmentos para mejoras permanentes.
-- Guardado local automatico.
+### En PC
+1. Abre `index.html` directamente en navegador
+2. *Opcional*: instala extensión "Live Server" para recargas automáticas
 
-## Siguiente paso para App Store real
+### En iPhone
+1. Crea un repo GitHub con esta carpeta
+2. Ve a Settings > Pages > Deploy from branch (main, root)
+3. Abre la URL HTTPS en Safari (ej: `https://tuusuario.github.io/Juego-iPhone/`)
+4. Toca Compartir > Añadir a pantalla de inicio
+5. Úsalo como app nativa
 
-Cuando quieras, lo empaquetamos con Capacitor para generar proyecto Xcode y publicarlo en App Store sin Unity.
+## 📋 Estructura
+- `index.html` - Estructura y dialogs
+- `styles.css` - UI moderna con grid, gradientes, animaciones
+- `script.js` - Motor de juego, lógica, guardado local
+- `manifest.json` - PWA metadata
+- `service-worker.js` - Offline support
+- `icon.svg` - Logo de la app
+
+## 🎮 Mecánica Principal
+
+1. **Sala 1→∞**: Derrota enemigos, gana oro
+2. **Oro**: Compra mejoras de run (aplican solo esta sesión)
+3. **Cada 6 salas**: Elige 1 reliquia de 3 opciones
+4. **Cada 5 salas**: Ganas esencias (canjea por mejoras permanentes)
+5. **Cada 8 salas**: Evento aleatorio con 3 opciones
+6. **Prestige**: Al resetear, ganas prestige = kills/50 (bonus futuro)
+
+## 🔮 Próximas Mejoras (Opcional)
+
+- Cartas con sinergias tipo Balatro
+- Artefactos especiales activables
+- Leaderboard local
+- Sonidos y partículas
+- Más reliquias y enemigos
+- Sistema de sacrificios (perder oro por powerups)
+
+## ⚙️ Técnico
+
+**Sin dependencias externas.** Puro vanilla JS + PWA standards.
+- LocalStorage para guardado
+- Service Worker para funcionamiento offline
+- Responsive en todos los tamaños
+- ~50KB total (muy rápido)
