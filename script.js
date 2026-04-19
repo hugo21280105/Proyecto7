@@ -1,4 +1,4 @@
-const SAVE_KEY = "arcanaTap_v4";
+const SAVE_KEY = "arcanaTap_v5";
 
 const state = {
   gold: 0,
@@ -9,18 +9,18 @@ const state = {
   totalKills: 0,
   bossesKilled: 0,
   crits: 0,
-  taps: 0,
-  comboCount: 0,
+  combo: 0,
   comboTimer: 0,
-  furyCooldown: 0,
+  furyCd: 0,
   overdriveCharge: 0,
   overdriveTime: 0,
-  tapDamageBase: 1,
+  tapBase: 1,
   dpsBase: 0,
+  activePanel: "shop",
   enemy: {
     name: "Slime del Sotano",
-    maxHp: 22,
     hp: 22,
+    maxHp: 22,
     shield: 0,
     isBoss: false,
     isElite: false,
@@ -29,221 +29,181 @@ const state = {
   meta: {
     tapBonus: 0,
     dpsBonus: 0,
-    critChance: 0,
+    critBonus: 0,
     goldBonus: 0,
     comboBonus: 0,
-    furyPower: 0,
-    overdrivePower: 0,
+    furyBonus: 0,
   },
-  runUpgrades: {
+  run: {
     blade: 0,
     familiar: 0,
-    chalice: 0,
+    greed: 0,
     mirror: 0,
     rune: 0,
-    anvil: 0,
   },
-  ownedRelicIds: [],
-  ownedCardIds: [],
-  modifiers: {
-    tapMult: 1,
-    dpsMult: 1,
-    goldMult: 1,
+  multipliers: {
+    tap: 1,
+    dps: 1,
     critChance: 0,
     critMult: 1.7,
-    enemyHpMult: 1,
-    comboMult: 1,
-    furyMult: 1,
-    overdriveMult: 1,
+    gold: 1,
+    enemyHp: 1,
     shieldBreak: 1,
+    overdrive: 1,
     shardChance: 0,
   },
+  relics: [],
+  cards: [],
   quests: {
-    q_kills_30: { progress: 0, claimed: false },
-    q_room_25: { progress: 0, claimed: false },
-    q_crits_20: { progress: 0, claimed: false },
-    q_boss_3: { progress: 0, claimed: false },
-    q_cards_4: { progress: 0, claimed: false },
+    kills30: { progress: 0, claimed: false },
+    room25: { progress: 0, claimed: false },
+    crit20: { progress: 0, claimed: false },
+    boss3: { progress: 0, claimed: false },
   },
 };
 
-const enemies = [
-  { name: "Slime del Sotano", baseHp: 22 },
-  { name: "Murcielago Ciego", baseHp: 18 },
-  { name: "Payaso de Carton", baseHp: 28 },
-  { name: "Cuervo Oxidado", baseHp: 25 },
-  { name: "Mago de Ceniza", baseHp: 34 },
-  { name: "Angel de Plomo", baseHp: 42 },
-  { name: "Arana de Cristal", baseHp: 51 },
+const enemyBases = [
+  { name: "Slime del Sotano", hp: 22 },
+  { name: "Murcielago Ciego", hp: 18 },
+  { name: "Payaso de Carton", hp: 28 },
+  { name: "Cuervo Oxidado", hp: 25 },
+  { name: "Mago de Ceniza", hp: 34 },
+  { name: "Angel de Plomo", hp: 42 },
+  { name: "Arana de Cristal", hp: 52 },
 ];
 
 const bosses = [
-  { name: "The Collector", hpMult: 4.7 },
-  { name: "Reina Tuerca", hpMult: 5.5 },
-  { name: "Ojo Carmesi", hpMult: 6.3 },
+  { name: "The Collector", hpMult: 4.8 },
+  { name: "Reina Tuerca", hpMult: 5.6 },
+  { name: "Ojo Carmesi", hpMult: 6.4 },
   { name: "Monarca de Sal", hpMult: 7.2 },
 ];
 
 const enemyMods = {
-  accelerated: { name: "Acelerado", desc: "Menos vida, mas agresivo", hpMult: 0.86, regen: 0 },
-  armored: { name: "Blindado", desc: "Mitiga dano", hpMult: 1.36, dmgReduction: 0.3, regen: 0 },
-  regenerating: { name: "Regenerador", desc: "Recupera vida", hpMult: 1.2, regen: 0.06 },
-  rich: { name: "Acaparador", desc: "Suelta mucho mas oro", hpMult: 1.08, goldBonus: 0.7 },
-  unstable: { name: "Inestable", desc: "Vida alta, premio alto", hpMult: 1.5, goldBonus: 0.45 },
+  armored: { name: "Blindado", desc: "Mitiga dano", hpMult: 1.35, damageReduction: 0.28 },
+  regen: { name: "Regenerador", desc: "Regenera HP", hpMult: 1.2, regen: 0.06 },
+  rich: { name: "Acaparador", desc: "+oro al morir", hpMult: 1.12, goldMult: 1.6 },
+  burst: { name: "Frenetico", desc: "Baja vida, alta recompensa", hpMult: 0.88, goldMult: 1.3 },
 };
 
-const runShop = [
-  { id: "blade", name: "Cuchilla Astillada", desc: "+1.8 dano base", tag: "Run", baseCost: 18, growth: 1.5,
-    buy: () => { state.runUpgrades.blade += 1; state.tapDamageBase += 1.8; } },
-  { id: "familiar", name: "Familiar de Laton", desc: "+1.4 DPS", tag: "Run", baseCost: 26, growth: 1.56,
-    buy: () => { state.runUpgrades.familiar += 1; state.dpsBase += 1.4; } },
-  { id: "chalice", name: "Caliz Dorado", desc: "+16% oro", tag: "Eco", baseCost: 34, growth: 1.62,
-    buy: () => { state.runUpgrades.chalice += 1; state.modifiers.goldMult *= 1.16; } },
-  { id: "mirror", name: "Espejo Roto", desc: "+10% critico", tag: "Crit", baseCost: 42, growth: 1.68,
-    buy: () => { state.runUpgrades.mirror += 1; state.modifiers.critChance += 0.1; } },
-  { id: "rune", name: "Runa de Sangre", desc: "+18% dano de golpe", tag: "Run", baseCost: 58, growth: 1.72,
-    buy: () => { state.runUpgrades.rune += 1; state.modifiers.tapMult *= 1.18; } },
-  { id: "anvil", name: "Yunque Arcano", desc: "+20% DPS", tag: "Run", baseCost: 66, growth: 1.75,
-    buy: () => { state.runUpgrades.anvil += 1; state.modifiers.dpsMult *= 1.2; } },
+const runUpgrades = [
+  { id: "blade", name: "Cuchilla Astillada", desc: "+1.7 dano base", tag: "run", base: 16, growth: 1.5,
+    apply: () => { state.run.blade += 1; state.tapBase += 1.7; } },
+  { id: "familiar", name: "Familiar de Laton", desc: "+1.3 DPS", tag: "run", base: 24, growth: 1.56,
+    apply: () => { state.run.familiar += 1; state.dpsBase += 1.3; } },
+  { id: "greed", name: "Caliz Dorado", desc: "+16% oro", tag: "run", base: 34, growth: 1.62,
+    apply: () => { state.run.greed += 1; state.multipliers.gold *= 1.16; } },
+  { id: "mirror", name: "Espejo Roto", desc: "+10% critico", tag: "run", base: 42, growth: 1.68,
+    apply: () => { state.run.mirror += 1; state.multipliers.critChance += 0.1; } },
+  { id: "rune", name: "Runa de Sangre", desc: "+18% dano de golpe", tag: "run", base: 58, growth: 1.73,
+    apply: () => { state.run.rune += 1; state.multipliers.tap *= 1.18; } },
 ];
 
-const metaShop = [
-  { id: "tapBonus", name: "Guante de Hierro", desc: "+1 dano permanente", cost: (lvl) => Math.floor(10 * Math.pow(1.85, lvl)),
-    buy: () => { state.meta.tapBonus += 1; } },
-  { id: "dpsBonus", name: "Totem de Bronce", desc: "+1 DPS permanente", cost: (lvl) => Math.floor(12 * Math.pow(1.9, lvl)),
-    buy: () => { state.meta.dpsBonus += 1; } },
-  { id: "critChance", name: "Moneda Marcada", desc: "+4% critico permanente", cost: (lvl) => Math.floor(15 * Math.pow(2.0, lvl)),
-    buy: () => { state.meta.critChance += 0.04; } },
-  { id: "goldBonus", name: "Cofre Infinito", desc: "+10% oro permanente", cost: (lvl) => Math.floor(18 * Math.pow(2.05, lvl)),
-    buy: () => { state.meta.goldBonus += 0.1; } },
-  { id: "comboBonus", name: "Cadena de Titanio", desc: "+6% combo base", cost: (lvl) => Math.floor(20 * Math.pow(2.2, lvl)),
-    buy: () => { state.meta.comboBonus += 0.06; } },
-  { id: "furyPower", name: "Nucleo de Ira", desc: "+15% dano de Furia", cost: (lvl) => Math.floor(24 * Math.pow(2.35, lvl)),
-    buy: () => { state.meta.furyPower += 0.15; } },
-  { id: "overdrivePower", name: "Catalizador Neon", desc: "+12% Overdrive", cost: (lvl) => Math.floor(26 * Math.pow(2.4, lvl)),
-    buy: () => { state.meta.overdrivePower += 0.12; } },
+const metaUpgrades = [
+  { id: "tapBonus", name: "Guante de Hierro", desc: "+1 dano permanente", cost: (lvl) => Math.floor(10 * Math.pow(1.85, lvl)), apply: () => { state.meta.tapBonus += 1; } },
+  { id: "dpsBonus", name: "Totem de Bronce", desc: "+1 DPS permanente", cost: (lvl) => Math.floor(12 * Math.pow(1.9, lvl)), apply: () => { state.meta.dpsBonus += 1; } },
+  { id: "critBonus", name: "Moneda Marcada", desc: "+4% critico permanente", cost: (lvl) => Math.floor(15 * Math.pow(2.0, lvl)), apply: () => { state.meta.critBonus += 0.04; } },
+  { id: "goldBonus", name: "Cofre Infinito", desc: "+10% oro permanente", cost: (lvl) => Math.floor(18 * Math.pow(2.05, lvl)), apply: () => { state.meta.goldBonus += 0.1; } },
+  { id: "comboBonus", name: "Cadena de Titanio", desc: "+5% combo base", cost: (lvl) => Math.floor(21 * Math.pow(2.2, lvl)), apply: () => { state.meta.comboBonus += 0.05; } },
+  { id: "furyBonus", name: "Nucleo de Ira", desc: "+15% Furia", cost: (lvl) => Math.floor(24 * Math.pow(2.3, lvl)), apply: () => { state.meta.furyBonus += 0.15; } },
 ];
 
 const relicPool = [
-  { id: "joker", name: "Joker Roto", desc: "+42% dano", rarity: "rare", apply: () => { state.modifiers.tapMult *= 1.42; } },
-  { id: "blood", name: "Sangre Fria", desc: "+60% DPS", rarity: "epic", apply: () => { state.modifiers.dpsMult *= 1.6; } },
-  { id: "coin", name: "Moneda Negra", desc: "+40% oro", rarity: "rare", apply: () => { state.modifiers.goldMult *= 1.4; } },
-  { id: "tear", name: "Lagrima Prismatica", desc: "+14% critico", rarity: "rare", apply: () => { state.modifiers.critChance += 0.14; } },
-  { id: "rage", name: "Anillo de Furia", desc: "+35% dano critico", rarity: "epic", apply: () => { state.modifiers.critMult += 0.35; } },
-  { id: "storm", name: "Punio de Trueno", desc: "+0.35 combo max", rarity: "epic", apply: () => { state.modifiers.comboMult += 0.35; } },
-  { id: "furnace", name: "Corazon de Horno", desc: "Furia +40%", rarity: "legendary", apply: () => { state.modifiers.furyMult *= 1.4; } },
-  { id: "miner", name: "Pico Fantasma", desc: "+18% chance esencias", rarity: "epic", apply: () => { state.modifiers.shardChance += 0.18; } },
-  { id: "duelist", name: "Sello Duelista", desc: "+22% dano de golpe", rarity: "rare", apply: () => { state.modifiers.tapMult *= 1.22; } },
-  { id: "engine", name: "Motor Obsidiana", desc: "+24% dano y +24% DPS", rarity: "legendary", apply: () => { state.modifiers.tapMult *= 1.24; state.modifiers.dpsMult *= 1.24; } },
-  { id: "crown", name: "Corona Hueca", desc: "+1 reliquia extra en bosses", rarity: "legendary", apply: () => {} },
+  { id: "joker", name: "Joker Roto", desc: "+42% dano", rarity: "quest", apply: () => { state.multipliers.tap *= 1.42; } },
+  { id: "blood", name: "Sangre Fria", desc: "+60% DPS", rarity: "quest", apply: () => { state.multipliers.dps *= 1.6; } },
+  { id: "coin", name: "Moneda Negra", desc: "+40% oro", rarity: "quest", apply: () => { state.multipliers.gold *= 1.4; } },
+  { id: "tear", name: "Lagrima Prismatica", desc: "+14% critico", rarity: "quest", apply: () => { state.multipliers.critChance += 0.14; } },
+  { id: "storm", name: "Punio de Trueno", desc: "+35% rompe-escudos", rarity: "quest", apply: () => { state.multipliers.shieldBreak *= 1.35; } },
+  { id: "engine", name: "Motor Obsidiana", desc: "+22% dano y DPS", rarity: "quest", apply: () => { state.multipliers.tap *= 1.22; state.multipliers.dps *= 1.22; } },
+  { id: "crown", name: "Corona Hueca", desc: "+1 reliquia extra en boss", rarity: "quest", apply: () => {} },
 ];
 
 const cardPool = [
-  { id: "glass-cannon", name: "Vidrio Rojo", desc: "+35% dano, enemigos +10% HP", apply: () => { state.modifiers.tapMult *= 1.35; state.modifiers.enemyHpMult *= 1.1; } },
-  { id: "tempo", name: "Tempo Azul", desc: "+0.20 combo y +20% DPS", apply: () => { state.modifiers.comboMult += 0.2; state.modifiers.dpsMult *= 1.2; } },
-  { id: "breaker", name: "Quebrador", desc: "+45% dano a escudos", apply: () => { state.modifiers.shieldBreak *= 1.45; } },
-  { id: "siphon", name: "Sifon", desc: "+20% oro y +10% esencias", apply: () => { state.modifiers.goldMult *= 1.2; state.modifiers.shardChance += 0.1; } },
-  { id: "afterburn", name: "Postcombustion", desc: "Overdrive +25%", apply: () => { state.modifiers.overdriveMult *= 1.25; } },
-  { id: "frenzy", name: "Frenesi", desc: "Furia recarga 10% mas rapido", apply: () => { state.furyCooldown = Math.max(0, state.furyCooldown - 1.6); } },
-  { id: "precision", name: "Precision", desc: "+9% critico", apply: () => { state.modifiers.critChance += 0.09; } },
-  { id: "echo", name: "Eco", desc: "+14% dano y +14% DPS", apply: () => { state.modifiers.tapMult *= 1.14; state.modifiers.dpsMult *= 1.14; } },
+  { id: "tempo", name: "Tempo Azul", desc: "+25% DPS y +10% combo", apply: () => { state.multipliers.dps *= 1.25; state.meta.comboBonus += 0.1; } },
+  { id: "breaker", name: "Quebrador", desc: "+50% dano a escudos", apply: () => { state.multipliers.shieldBreak *= 1.5; } },
+  { id: "glass", name: "Vidrio Rojo", desc: "+35% dano, enemigos +12% HP", apply: () => { state.multipliers.tap *= 1.35; state.multipliers.enemyHp *= 1.12; } },
+  { id: "afterburn", name: "Postcombustion", desc: "+30% Overdrive", apply: () => { state.multipliers.overdrive *= 1.3; } },
+  { id: "siphon", name: "Sifon", desc: "+20% oro y +10% chance esencias", apply: () => { state.multipliers.gold *= 1.2; state.multipliers.shardChance += 0.1; } },
+  { id: "precision", name: "Precision", desc: "+8% critico", apply: () => { state.multipliers.critChance += 0.08; } },
 ];
 
-const quests = {
-  q_kills_30: { title: "Carnicero", goal: 30, text: "Elimina 30 enemigos en la run", rewardText: "+220 oro", reward: () => { state.gold += 220; }, readProgress: () => state.kills },
-  q_room_25: { title: "Explorador", goal: 25, text: "Llega a la Sala 25", rewardText: "+4 esencias", reward: () => { state.shards += 4; }, readProgress: () => state.room },
-  q_crits_20: { title: "Cirujano", goal: 20, text: "Realiza 20 golpes criticos", rewardText: "+35% dano critico (run)", reward: () => { state.modifiers.critMult += 0.35; }, readProgress: () => state.crits },
-  q_boss_3: { title: "Cazador de Jefes", goal: 3, text: "Derrota 3 bosses", rewardText: "+1 reliquia", reward: () => { grantRandomRelic(); }, readProgress: () => state.bossesKilled },
-  q_cards_4: { title: "Arquitecto", goal: 4, text: "Consigue 4 cartas", rewardText: "+300 oro", reward: () => { state.gold += 300; }, readProgress: () => state.ownedCardIds.length },
+const questDefs = {
+  kills30: { title: "Carnicero", text: "Elimina 30 enemigos", goal: 30, reward: "+220 oro", claim: () => { state.gold += 220; }, progress: () => state.kills },
+  room25: { title: "Explorador", text: "Llega a sala 25", goal: 25, reward: "+4 esencias", claim: () => { state.shards += 4; }, progress: () => state.room },
+  crit20: { title: "Cirujano", text: "Haz 20 criticos", goal: 20, reward: "+35% dano critico", claim: () => { state.multipliers.critMult += 0.35; }, progress: () => state.crits },
+  boss3: { title: "Cazador de Jefes", text: "Derrota 3 bosses", goal: 3, reward: "+1 reliquia", claim: () => { grantRandomRelic(); }, progress: () => state.bossesKilled },
 };
 
 const events = [
   {
     title: "Mercader Pirata",
-    desc: "Te ofrece un trato arriesgado.",
+    subtitle: "Te ofrece un trato arriesgado",
     choices: [
-      { text: "Comprar Reliquia (120 oro)", effect: () => {
+      { label: "Comprar reliquia (120 oro)", do: () => {
         if (state.gold < 120) return "No tienes suficiente oro";
         state.gold -= 120;
         grantRandomRelic();
         return "Trato cerrado";
       } },
-      { text: "Robarle", effect: () => {
-        if (Math.random() < 0.55) {
-          state.gold += 170;
-          return "Robo exitoso: +170 oro";
-        }
-        state.gold = Math.max(0, state.gold - 120);
-        return "Te atraparon: -120 oro";
-      } },
-      { text: "Ignorar", effect: () => "Sigues tu camino" },
+      { label: "Cobrar oro seguro", do: () => { state.gold += 130; return "+130 oro"; } },
+      { label: "Ignorar", do: () => "Sigues adelante" },
     ],
   },
   {
     title: "Fuente de Fuego",
-    desc: "Una fuente arde con energia estable.",
+    subtitle: "Canaliza energia elemental",
     choices: [
-      { text: "Bendecir arma", effect: () => { state.modifiers.tapMult *= 1.2; return "+20% dano de golpe"; } },
-      { text: "Absorber calor", effect: () => { state.modifiers.dpsMult *= 1.2; return "+20% DPS"; } },
-      { text: "Ofrecer esencias", effect: () => {
-        if (state.shards < 2) return "Necesitas 2 esencias";
+      { label: "Bendecir arma", do: () => { state.multipliers.tap *= 1.2; return "+20% dano"; } },
+      { label: "Absorber calor", do: () => { state.multipliers.dps *= 1.2; return "+20% DPS"; } },
+      { label: "Sacrificar 2 esencias", do: () => {
+        if (state.shards < 2) return "No tienes esencias";
         state.shards -= 2;
-        state.modifiers.goldMult *= 1.3;
-        return "Pacto sellado: +30% oro";
-      } },
-    ],
-  },
-  {
-    title: "Mesa de Cartas",
-    desc: "Un dealer te deja elegir una carta.",
-    choices: [
-      { text: "Tomar carta", effect: () => { openCardDraft(); return "Elige tu carta"; } },
-      { text: "Cobrar oro", effect: () => { state.gold += 130; return "+130 oro"; } },
-      { text: "Intercambiar reliquia", effect: () => {
-        if (!state.ownedRelicIds.length) return "No tienes reliquias";
-        state.ownedRelicIds.pop();
-        grantRandomRelic();
-        return "Intercambio realizado";
+        state.multipliers.gold *= 1.3;
+        return "+30% oro";
       } },
     ],
   },
 ];
 
-const $ = (id) => document.getElementById(id);
 const ui = {
-  gold: $("gold"), tapDamage: $("tapDamage"), dps: $("dps"), shards: $("shards"),
-  prestige: $("prestige"), relicCount: $("relicCount"), comboValue: $("comboValue"), bossCount: $("bossCount"), cardCount: $("cardCount"),
-  enemyName: $("enemyName"), enemyMods: $("enemyMods"), stageLabel: $("stageLabel"), hpText: $("hpText"), hpBar: $("hpBar"),
-  overdriveBar: $("overdriveBar"), overdriveText: $("overdriveText"),
-  attackBtn: $("attackBtn"), skillBtn: $("skillBtn"), skillText: $("skillText"), runInfo: $("runInfo"), damagePreview: $("damagePreview"),
-  floatingLog: $("floatingLog"), shopGrid: $("shopGrid"), metaGrid: $("metaGrid"), questList: $("questList"), cardList: $("cardList"),
-  relicDialog: $("relicDialog"), relicChoices: $("relicChoices"), relicSubtitle: $("relicSubtitle"),
-  eventDialog: $("eventDialog"), eventTitle: $("eventTitle"), eventDesc: $("eventDesc"), eventChoices: $("eventChoices"),
-  cardDialog: $("cardDialog"), cardSubtitle: $("cardSubtitle"), cardChoices: $("cardChoices"),
-  resetRunBtn: $("resetRunBtn"), activeRelics: $("activeRelics"), prestigeBar: $("prestigeBar"),
+  runStatus: document.getElementById("runStatus"),
+  gold: document.getElementById("gold"),
+  tapDamage: document.getElementById("tapDamage"),
+  dps: document.getElementById("dps"),
+  shards: document.getElementById("shards"),
+  combo: document.getElementById("combo"),
+  critChance: document.getElementById("critChance"),
+  bosses: document.getElementById("bosses"),
+  cards: document.getElementById("cards"),
+  enemyName: document.getElementById("enemyName"),
+  enemyMeta: document.getElementById("enemyMeta"),
+  stage: document.getElementById("stage"),
+  hpBar: document.getElementById("hpBar"),
+  hpText: document.getElementById("hpText"),
+  overdriveBar: document.getElementById("overdriveBar"),
+  overdriveText: document.getElementById("overdriveText"),
+  combatLog: document.getElementById("combatLog"),
+  attackBtn: document.getElementById("attackBtn"),
+  attackPreview: document.getElementById("attackPreview"),
+  furyBtn: document.getElementById("furyBtn"),
+  furyText: document.getElementById("furyText"),
+  tabs: Array.from(document.querySelectorAll(".tab-btn")),
+  panels: Array.from(document.querySelectorAll(".panel")),
+  shopList: document.getElementById("shopList"),
+  cardList: document.getElementById("cardList"),
+  relicList: document.getElementById("relicList"),
+  questList: document.getElementById("questList"),
+  metaList: document.getElementById("metaList"),
+  menuBtn: document.getElementById("menuBtn"),
+  menuDialog: document.getElementById("menuDialog"),
+  newRunBtn: document.getElementById("newRunBtn"),
+  forceCardBtn: document.getElementById("forceCardBtn"),
+  forceRelicBtn: document.getElementById("forceRelicBtn"),
+  draftDialog: document.getElementById("draftDialog"),
+  draftTitle: document.getElementById("draftTitle"),
+  draftSubtitle: document.getElementById("draftSubtitle"),
+  draftChoices: document.getElementById("draftChoices"),
 };
-
-function safeAssign(target, incoming) {
-  Object.keys(target).forEach((k) => {
-    if (incoming[k] !== undefined) {
-      if (typeof target[k] === "object" && target[k] !== null && !Array.isArray(target[k])) {
-        safeAssign(target[k], incoming[k] || {});
-      } else {
-        target[k] = incoming[k];
-      }
-    }
-  });
-}
-
-function loadSave() {
-  const raw = localStorage.getItem(SAVE_KEY);
-  if (!raw) return;
-  try { safeAssign(state, JSON.parse(raw)); } catch {}
-}
-
-function save() {
-  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-}
 
 function num(n) {
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
@@ -251,28 +211,49 @@ function num(n) {
   return Math.floor(n).toString();
 }
 
-function currentComboMult() {
-  const base = 1 + Math.min(0.95, state.comboCount * 0.04 + state.meta.comboBonus);
-  return base * state.modifiers.comboMult;
+function deepAssign(target, source) {
+  Object.keys(target).forEach((key) => {
+    if (source[key] === undefined) return;
+    if (typeof target[key] === "object" && target[key] && !Array.isArray(target[key])) {
+      deepAssign(target[key], source[key] || {});
+    } else {
+      target[key] = source[key];
+    }
+  });
 }
 
-function currentOverdriveMult() {
-  if (state.overdriveTime <= 0) return 1;
-  return 1.65 * state.modifiers.overdriveMult * (1 + state.meta.overdrivePower);
+function load() {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (!raw) return;
+  try {
+    deepAssign(state, JSON.parse(raw));
+  } catch {
+    // Ignore invalid save.
+  }
 }
 
-function currentTapDamage() {
-  const base = state.tapDamageBase + state.meta.tapBonus;
-  return Math.max(1, base * state.modifiers.tapMult * currentComboMult() * currentOverdriveMult());
+function save() {
+  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
 }
 
-function currentDps() {
-  const base = state.dpsBase + state.meta.dpsBonus;
-  return Math.max(0, base * state.modifiers.dpsMult * currentOverdriveMult());
+function tapDamage() {
+  return (state.tapBase + state.meta.tapBonus) * state.multipliers.tap * comboMult() * overdriveMult();
 }
 
-function currentCritChance() {
-  return Math.min(0.92, state.modifiers.critChance + state.meta.critChance + state.prestige * 0.002);
+function dpsDamage() {
+  return (state.dpsBase + state.meta.dpsBonus) * state.multipliers.dps * overdriveMult();
+}
+
+function comboMult() {
+  return 1 + Math.min(1, state.combo * 0.04 + state.meta.comboBonus);
+}
+
+function overdriveMult() {
+  return state.overdriveTime > 0 ? 1.6 * state.multipliers.overdrive : 1;
+}
+
+function critChance() {
+  return Math.min(0.92, state.multipliers.critChance + state.meta.critBonus + state.prestige * 0.002);
 }
 
 function isBossRoom() {
@@ -283,35 +264,34 @@ function isEliteRoom() {
   return !isBossRoom() && state.room % 7 === 0;
 }
 
-function randomEnemyModId() {
+function randomModId() {
   const keys = Object.keys(enemyMods);
   return keys[Math.floor(Math.random() * keys.length)];
 }
 
 function spawnEnemy() {
-  const baseEnemy = enemies[(state.room - 1) % enemies.length];
-  const roomScale = Math.pow(1.21, state.room - 1);
+  const base = enemyBases[(state.room - 1) % enemyBases.length];
+  const scale = Math.pow(1.21, state.room - 1);
 
   state.enemy.isBoss = isBossRoom();
   state.enemy.isElite = isEliteRoom();
-  state.enemy.modId = state.enemy.isBoss ? null : (Math.random() < Math.min(0.5, 0.06 + state.room * 0.012) ? randomEnemyModId() : null);
+  state.enemy.modId = state.enemy.isBoss ? null : (Math.random() < Math.min(0.5, 0.08 + state.room * 0.01) ? randomModId() : null);
 
-  const bossData = bosses[(Math.floor(state.room / 10) - 1 + bosses.length) % bosses.length];
-  let hp = baseEnemy.baseHp * roomScale * state.modifiers.enemyHpMult;
+  let hp = base.hp * scale * state.multipliers.enemyHp;
 
   if (state.enemy.isBoss) {
-    hp *= bossData.hpMult;
-    state.enemy.name = `${bossData.name} - Boss ${state.room}`;
+    const boss = bosses[(Math.floor(state.room / 10) - 1) % bosses.length];
+    hp *= boss.hpMult;
+    state.enemy.name = `${boss.name} - Boss`;
   } else if (state.enemy.isElite) {
     hp *= 2.2;
-    state.enemy.name = `${baseEnemy.name} Elite`;
+    state.enemy.name = `${base.name} Elite`;
   } else {
-    state.enemy.name = baseEnemy.name;
+    state.enemy.name = base.name;
   }
 
   if (state.enemy.modId) {
-    const mod = enemyMods[state.enemy.modId];
-    hp *= mod.hpMult || 1;
+    hp *= enemyMods[state.enemy.modId].hpMult || 1;
   }
 
   state.enemy.maxHp = Math.floor(hp);
@@ -319,73 +299,42 @@ function spawnEnemy() {
   state.enemy.shield = state.enemy.isElite ? Math.floor(state.enemy.maxHp * 0.3) : 0;
 }
 
-function rewardForKill() {
+function killReward() {
   const base = 12 + Math.floor(state.room * 1.45);
-  let mult = state.modifiers.goldMult * (1 + state.meta.goldBonus + state.prestige * 0.01);
-  if (state.enemy.modId && enemyMods[state.enemy.modId].goldBonus) mult *= 1 + enemyMods[state.enemy.modId].goldBonus;
-  if (state.enemy.isElite) mult *= 1.5;
-  if (state.enemy.isBoss) mult *= 2.4;
+  let mult = state.multipliers.gold * (1 + state.meta.goldBonus + state.prestige * 0.01);
+  if (state.enemy.modId && enemyMods[state.enemy.modId].goldMult) mult *= enemyMods[state.enemy.modId].goldMult;
+  if (state.enemy.isElite) mult *= 1.45;
+  if (state.enemy.isBoss) mult *= 2.3;
   return base * mult;
 }
 
-function shardDrop() {
-  let gain = 0;
-  if (state.room % 5 === 0 || state.enemy.isBoss) gain += 1 + Math.floor(state.room / 25);
-  if (state.enemy.isElite) gain += 1;
-  if (Math.random() < state.modifiers.shardChance) gain += 1;
-  return gain;
+function shardReward() {
+  let amount = 0;
+  if (state.room % 5 === 0 || state.enemy.isBoss) amount += 1 + Math.floor(state.room / 25);
+  if (state.enemy.isElite) amount += 1;
+  if (Math.random() < state.multipliers.shardChance) amount += 1;
+  return amount;
 }
 
 function applyQuestProgress() {
-  Object.keys(quests).forEach((id) => {
-    if (state.quests[id]) state.quests[id].progress = quests[id].readProgress();
+  Object.keys(questDefs).forEach((id) => {
+    state.quests[id].progress = questDefs[id].progress();
   });
 }
 
-function activateOverdrive() {
-  state.overdriveCharge = 0;
-  state.overdriveTime = 8.0;
-  flash("Overdrive activado");
-}
-
-function applyEnemyDamage(amount) {
-  let dmg = amount;
-  if (state.enemy.modId && enemyMods[state.enemy.modId].dmgReduction) {
-    dmg *= 1 - enemyMods[state.enemy.modId].dmgReduction;
-  }
-
-  if (state.enemy.shield > 0) {
-    const shieldDmg = dmg * state.modifiers.shieldBreak;
-    state.enemy.shield -= shieldDmg;
-    if (state.enemy.shield < 0) {
-      state.enemy.hp += state.enemy.shield;
-      state.enemy.shield = 0;
-    }
-  } else {
-    state.enemy.hp -= dmg;
-  }
-
-  if (state.enemy.hp < 0) state.enemy.hp = 0;
-}
-
-function onEnemyDefeated(source) {
+function onEnemyDown(source) {
   state.kills += 1;
   state.totalKills += 1;
+  if (state.enemy.isBoss) state.bossesKilled += 1;
 
-  const reward = rewardForKill();
-  const shard = shardDrop();
-  state.gold += reward;
-  state.shards += shard;
+  const gold = killReward();
+  const shards = shardReward();
+  state.gold += gold;
+  state.shards += shards;
 
   if (state.enemy.isBoss) {
-    state.bossesKilled += 1;
     grantRandomRelic();
     if (hasRelic("crown")) grantRandomRelic();
-    flash(`${source}: Boss derrotado +${num(reward)} oro, +${shard} esencias`);
-  } else if (state.enemy.isElite) {
-    flash(`${source}: Elite derrotado +${num(reward)} oro, +${shard} esencias`);
-  } else {
-    flash(`${source}: +${num(reward)} oro${shard > 0 ? `, +${shard} esencias` : ""}`);
   }
 
   state.room += 1;
@@ -396,495 +345,493 @@ function onEnemyDefeated(source) {
   if (state.room % 12 === 0) openCardDraft();
   if (state.room % 8 === 0 && Math.random() < 0.7) openEventDialog();
 
-  render();
+  flash(`${source}: +${num(gold)} oro${shards ? `, +${shards} esencias` : ""}`);
+  renderAll();
   save();
 }
 
-function damageEnemy(amount, source = "Golpe") {
-  applyEnemyDamage(amount);
-  render(false);
-  if (state.enemy.hp <= 0) onEnemyDefeated(source);
-}
-
-function grantRelic(relicId) {
-  if (state.ownedRelicIds.includes(relicId)) {
-    state.gold += 120;
-    return;
+function applyDamage(raw, source) {
+  let dmg = raw;
+  if (state.enemy.modId && enemyMods[state.enemy.modId].damageReduction) {
+    dmg *= 1 - enemyMods[state.enemy.modId].damageReduction;
   }
-  const relic = relicPool.find((r) => r.id === relicId);
-  if (!relic) return;
-  state.ownedRelicIds.push(relicId);
-  relic.apply();
-}
 
-function grantRandomRelic() {
-  const options = relicPool.filter((r) => !state.ownedRelicIds.includes(r.id));
-  if (!options.length) {
-    state.gold += 300;
-    return;
+  if (state.enemy.shield > 0) {
+    const shieldDmg = dmg * state.multipliers.shieldBreak;
+    state.enemy.shield -= shieldDmg;
+    if (state.enemy.shield < 0) {
+      state.enemy.hp += state.enemy.shield;
+      state.enemy.shield = 0;
+    }
+  } else {
+    state.enemy.hp -= dmg;
   }
-  const relic = options[Math.floor(Math.random() * options.length)];
-  grantRelic(relic.id);
+
+  if (state.enemy.hp < 0) state.enemy.hp = 0;
+  renderLive();
+  if (state.enemy.hp <= 0) onEnemyDown(source);
 }
 
-function grantCard(cardId) {
-  if (state.ownedCardIds.includes(cardId)) {
-    state.gold += 180;
-    return;
-  }
-  const card = cardPool.find((c) => c.id === cardId);
-  if (!card) return;
-  state.ownedCardIds.push(cardId);
-  card.apply();
-  applyQuestProgress();
-}
-
-function attackTap() {
-  state.taps += 1;
-  state.comboCount += 1;
+function normalHit() {
+  state.combo += 1;
   state.comboTimer = 2.2;
+  let dmg = tapDamage();
 
-  let dmg = currentTapDamage();
-  const isCrit = Math.random() < currentCritChance();
-  if (isCrit) {
-    dmg *= state.modifiers.critMult;
+  const crit = Math.random() < critChance();
+  if (crit) {
+    dmg *= state.multipliers.critMult;
     state.crits += 1;
-    state.overdriveCharge += 9;
+    state.overdriveCharge += 10;
   } else {
     state.overdriveCharge += 6;
   }
 
-  if (state.overdriveCharge >= 100) activateOverdrive();
+  if (state.overdriveCharge >= 100) {
+    state.overdriveCharge = 0;
+    state.overdriveTime = 8;
+    flash("Overdrive activado");
+  }
+
   applyQuestProgress();
-  damageEnemy(dmg, isCrit ? "CRIT" : "Golpe");
+  applyDamage(dmg, crit ? "CRIT" : "Golpe");
 }
 
-function useFury() {
-  if (state.furyCooldown > 0) return;
-  const furyBase = (currentTapDamage() * 12 + currentDps() * 7) * (1 + state.meta.furyPower);
-  const furyDamage = furyBase * state.modifiers.furyMult;
-  state.furyCooldown = 16;
-  damageEnemy(furyDamage, "Furia");
-  flash(`FURIA: ${num(furyDamage)} dano`);
+function furyHit() {
+  if (state.furyCd > 0) return;
+  const fury = (tapDamage() * 12 + dpsDamage() * 7) * (1 + state.meta.furyBonus);
+  state.furyCd = 16;
+  applyDamage(fury, "Furia");
+  flash(`Furia: ${num(fury)} dano`);
 }
 
-function upgradeCost(item) {
-  const lvl = state.runUpgrades[item.id] || 0;
-  return Math.floor(item.baseCost * Math.pow(item.growth, lvl));
+function runUpgradeCost(id) {
+  const def = runUpgrades.find((x) => x.id === id);
+  if (!def) return 0;
+  const lvl = state.run[id] || 0;
+  return Math.floor(def.base * Math.pow(def.growth, lvl));
 }
 
 function buyRunUpgrade(id) {
-  const item = runShop.find((x) => x.id === id);
-  if (!item) return;
-  const cost = upgradeCost(item);
+  const def = runUpgrades.find((x) => x.id === id);
+  if (!def) return;
+  const cost = runUpgradeCost(id);
   if (state.gold < cost) return;
   state.gold -= cost;
-  item.buy();
-  render();
+  def.apply();
+  renderAll();
   save();
 }
 
 function buyMetaUpgrade(id) {
-  const item = metaShop.find((x) => x.id === id);
-  if (!item) return;
+  const def = metaUpgrades.find((x) => x.id === id);
+  if (!def) return;
   const lvl = state.meta[id] || 0;
-  const cost = item.cost(lvl);
+  const cost = def.cost(lvl);
   if (state.shards < cost) return;
   state.shards -= cost;
-  item.buy();
-  render();
+  def.apply();
+  renderAll();
   save();
 }
 
 function claimQuest(id) {
-  const quest = quests[id];
+  const quest = questDefs[id];
   const status = state.quests[id];
   if (!quest || !status || status.claimed) return;
   if (status.progress < quest.goal) return;
   status.claimed = true;
-  quest.reward();
-  flash(`Mision completada: ${quest.rewardText}`);
-  render();
+  quest.claim();
+  flash(`Mision completada: ${quest.reward}`);
+  renderAll();
   save();
 }
 
-function drawShop() {
-  ui.shopGrid.innerHTML = "";
-  runShop.forEach((item) => {
-    const cost = upgradeCost(item);
-    const canBuy = state.gold >= cost;
-    const div = document.createElement("article");
-    div.className = "item";
-    div.innerHTML = `
-      <div>
-        <h4>${item.name}</h4>
-        <p>${item.desc}</p>
-        <span class="color-tag rare">${item.tag}</span>
-      </div>
-      <button class="buy-btn" ${canBuy ? "" : "disabled"}>${num(cost)}</button>
-    `;
-    div.querySelector("button").addEventListener("click", () => buyRunUpgrade(item.id));
-    ui.shopGrid.appendChild(div);
-  });
-}
-
-function drawMetaShop() {
-  ui.metaGrid.innerHTML = "";
-  metaShop.forEach((item) => {
-    const lvl = state.meta[item.id] || 0;
-    const cost = item.cost(lvl);
-    const canBuy = state.shards >= cost;
-    const div = document.createElement("article");
-    div.className = "item";
-    div.innerHTML = `
-      <div>
-        <h4>${item.name} <span style="opacity:0.6;">Lv.${lvl}</span></h4>
-        <p>${item.desc}</p>
-        <span class="color-tag epic">Permanente</span>
-      </div>
-      <button class="buy-btn" ${canBuy ? "" : "disabled"}>${num(cost)}</button>
-    `;
-    div.querySelector("button").addEventListener("click", () => buyMetaUpgrade(item.id));
-    ui.metaGrid.appendChild(div);
-  });
-}
-
-function drawQuests() {
-  ui.questList.innerHTML = "";
-  Object.entries(quests).forEach(([id, quest]) => {
-    const status = state.quests[id];
-    const pct = Math.min(100, Math.floor((status.progress / quest.goal) * 100));
-    const done = status.progress >= quest.goal;
-    const claimed = status.claimed;
-
-    const div = document.createElement("article");
-    div.className = "item";
-    div.innerHTML = `
-      <div>
-        <h4>${quest.title}</h4>
-        <p>${quest.text}</p>
-        <p>${status.progress} / ${quest.goal} (${pct}%)</p>
-        <span class="color-tag ${done ? "legendary" : "rare"}">${quest.rewardText}</span>
-      </div>
-      <button class="buy-btn" ${done && !claimed ? "" : "disabled"}>${claimed ? "Cobrada" : "Cobrar"}</button>
-    `;
-    div.querySelector("button").addEventListener("click", () => claimQuest(id));
-    ui.questList.appendChild(div);
-  });
-}
-
-function drawCards() {
-  ui.cardList.innerHTML = "";
-  if (!state.ownedCardIds.length) {
-    ui.cardList.innerHTML = "<p style='color: var(--muted); font-size: 0.9rem;'>Sin cartas aun. Aparecen cada 12 salas.</p>";
+function grantRelic(id) {
+  if (state.relics.includes(id)) {
+    state.gold += 120;
     return;
   }
-  state.ownedCardIds.forEach((id) => {
-    const card = cardPool.find((c) => c.id === id);
-    if (!card) return;
-    const div = document.createElement("div");
-    div.className = "card-badge";
-    div.innerHTML = `<strong>${card.name}</strong><p>${card.desc}</p>`;
-    ui.cardList.appendChild(div);
-  });
+  const relic = relicPool.find((r) => r.id === id);
+  if (!relic) return;
+  state.relics.push(id);
+  relic.apply();
 }
 
-function drawActiveRelics() {
-  ui.activeRelics.innerHTML = "";
-  if (!state.ownedRelicIds.length) {
-    ui.activeRelics.innerHTML = "<p style='color: var(--muted); font-size: 0.9rem;'>Sin reliquias todavia. Sube salas y derrota bosses.</p>";
+function grantRandomRelic() {
+  const available = relicPool.filter((r) => !state.relics.includes(r.id));
+  if (!available.length) {
+    state.gold += 300;
     return;
   }
-
-  state.ownedRelicIds.forEach((id) => {
-    const relic = relicPool.find((r) => r.id === id);
-    if (!relic) return;
-    const div = document.createElement("div");
-    div.className = "relic-badge";
-    div.innerHTML = `<strong>${relic.name}</strong><p>${relic.desc}</p>`;
-    ui.activeRelics.appendChild(div);
-  });
+  const relic = available[Math.floor(Math.random() * available.length)];
+  grantRelic(relic.id);
 }
 
-function pickUniqueOptions(pool, owned, n) {
+function grantCard(id) {
+  if (state.cards.includes(id)) {
+    state.gold += 150;
+    return;
+  }
+  const card = cardPool.find((c) => c.id === id);
+  if (!card) return;
+  state.cards.push(id);
+  card.apply();
+  applyQuestProgress();
+}
+
+function pickOptions(pool, owned, n) {
   const available = pool.filter((x) => !owned.includes(x.id));
   const bag = available.length ? available : [...pool];
   const copy = [...bag];
-  const picks = [];
-  while (picks.length < n && copy.length) {
+  const result = [];
+  while (result.length < n && copy.length) {
     const i = Math.floor(Math.random() * copy.length);
-    picks.push(copy.splice(i, 1)[0]);
+    result.push(copy.splice(i, 1)[0]);
   }
-  return picks;
+  return result;
+}
+
+function openDraft(title, subtitle, options, onPick) {
+  ui.draftTitle.textContent = title;
+  ui.draftSubtitle.textContent = subtitle;
+  ui.draftChoices.innerHTML = options.map((opt) => (
+    `<button type="button" class="choice-btn" data-choice="${opt.id}"><strong>${opt.name}</strong><br>${opt.desc}</button>`
+  )).join("");
+
+  ui.draftChoices.onclick = (ev) => {
+    const btn = ev.target.closest("button[data-choice]");
+    if (!btn) return;
+    onPick(btn.dataset.choice);
+    ui.draftDialog.close();
+    renderAll();
+    save();
+  };
+
+  if (!ui.draftDialog.open) ui.draftDialog.showModal();
 }
 
 function openRelicDraft() {
-  ui.relicChoices.innerHTML = "";
-  ui.relicSubtitle.textContent = `Elige 1 de 3 - Reliquias: ${state.ownedRelicIds.length}`;
-
-  pickUniqueOptions(relicPool, state.ownedRelicIds, 3).forEach((relic) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "relic-btn";
-    btn.innerHTML = `<strong>${relic.name}</strong><p>${relic.desc}</p><span class="color-tag ${relic.rarity}">${relic.rarity}</span>`;
-    btn.addEventListener("click", () => {
-      grantRelic(relic.id);
-      ui.relicDialog.close();
-      flash(`Reliquia: ${relic.name}`);
-      render();
-      save();
-    });
-    ui.relicChoices.appendChild(btn);
+  const opts = pickOptions(relicPool, state.relics, 3);
+  openDraft("Elige 1 Reliquia", `Tienes ${state.relics.length} reliquias`, opts, (id) => {
+    grantRelic(id);
+    flash("Reliquia obtenida");
   });
-
-  if (!ui.relicDialog.open) ui.relicDialog.showModal();
 }
 
 function openCardDraft() {
-  ui.cardChoices.innerHTML = "";
-  ui.cardSubtitle.textContent = `Elige 1 de 3 - Cartas: ${state.ownedCardIds.length}`;
-
-  pickUniqueOptions(cardPool, state.ownedCardIds, 3).forEach((card) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "event-btn";
-    btn.innerHTML = `<strong>${card.name}</strong><p>${card.desc}</p>`;
-    btn.addEventListener("click", () => {
-      grantCard(card.id);
-      ui.cardDialog.close();
-      flash(`Carta: ${card.name}`);
-      render();
-      save();
-    });
-    ui.cardChoices.appendChild(btn);
+  const opts = pickOptions(cardPool, state.cards, 3);
+  openDraft("Elige 1 Carta", `Tienes ${state.cards.length} cartas`, opts, (id) => {
+    grantCard(id);
+    flash("Carta equipada");
   });
-
-  if (!ui.cardDialog.open) ui.cardDialog.showModal();
 }
 
 function openEventDialog() {
   const event = events[Math.floor(Math.random() * events.length)];
-  ui.eventTitle.textContent = event.title;
-  ui.eventDesc.textContent = event.desc;
-  ui.eventChoices.innerHTML = "";
-
-  event.choices.forEach((choice) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "event-btn";
-    btn.textContent = choice.text;
-    btn.addEventListener("click", () => {
-      const result = choice.effect();
-      ui.eventDialog.close();
-      flash(result);
-      render();
-      save();
-    });
-    ui.eventChoices.appendChild(btn);
+  openDraft(event.title, event.subtitle, event.choices.map((c, i) => ({ id: String(i), name: c.label, desc: "" })), (id) => {
+    const result = event.choices[Number(id)].do();
+    flash(result);
   });
-
-  if (!ui.eventDialog.open) ui.eventDialog.showModal();
-}
-
-function resetRun() {
-  state.prestige += Math.floor(state.totalKills / 55);
-  state.room = 1;
-  state.kills = 0;
-  state.crits = 0;
-  state.taps = 0;
-  state.comboCount = 0;
-  state.comboTimer = 0;
-  state.furyCooldown = 0;
-  state.overdriveCharge = 0;
-  state.overdriveTime = 0;
-  state.tapDamageBase = 1;
-  state.dpsBase = 0;
-  state.runUpgrades = { blade: 0, familiar: 0, chalice: 0, mirror: 0, rune: 0, anvil: 0 };
-  state.ownedRelicIds = [];
-  state.ownedCardIds = [];
-  state.modifiers = {
-    tapMult: 1,
-    dpsMult: 1,
-    goldMult: 1,
-    critChance: 0,
-    critMult: 1.7,
-    enemyHpMult: 1,
-    comboMult: 1,
-    furyMult: 1,
-    overdriveMult: 1,
-    shieldBreak: 1,
-    shardChance: 0,
-  };
-  state.quests = {
-    q_kills_30: { progress: 0, claimed: false },
-    q_room_25: { progress: 0, claimed: false },
-    q_crits_20: { progress: 0, claimed: false },
-    q_boss_3: { progress: 0, claimed: false },
-    q_cards_4: { progress: 0, claimed: false },
-  };
-
-  spawnEnemy();
-  render();
-  save();
-}
-
-function flash(text) {
-  ui.floatingLog.textContent = text;
-  clearTimeout(flash._t);
-  flash._t = setTimeout(() => { ui.floatingLog.textContent = ""; }, 1800);
 }
 
 function hasRelic(id) {
-  return state.ownedRelicIds.includes(id);
+  return state.relics.includes(id);
 }
 
-function render(full = true) {
-  const tap = currentTapDamage();
-  const dps = currentDps();
-  const critChance = currentCritChance();
+function renderPanelTabs() {
+  ui.tabs.forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === state.activePanel));
+  ui.panels.forEach((panel) => panel.classList.toggle("active", panel.dataset.panel === state.activePanel));
+}
 
+function renderShop() {
+  ui.shopList.innerHTML = runUpgrades.map((u) => {
+    const cost = runUpgradeCost(u.id);
+    const can = state.gold >= cost;
+    return `
+      <article class="item">
+        <div>
+          <h4>${u.name}</h4>
+          <p>${u.desc}</p>
+          <span class="badge run">Run</span>
+        </div>
+        <button type="button" class="buy-btn" data-run-buy="${u.id}" ${can ? "" : "disabled"}>${num(cost)}</button>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderMeta() {
+  ui.metaList.innerHTML = metaUpgrades.map((u) => {
+    const lvl = state.meta[u.id] || 0;
+    const cost = u.cost(lvl);
+    const can = state.shards >= cost;
+    return `
+      <article class="item">
+        <div>
+          <h4>${u.name} <span style="opacity:.6;">Lv.${lvl}</span></h4>
+          <p>${u.desc}</p>
+          <span class="badge perm">Permanente</span>
+        </div>
+        <button type="button" class="buy-btn" data-meta-buy="${u.id}" ${can ? "" : "disabled"}>${num(cost)}</button>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderRelics() {
+  if (!state.relics.length) {
+    ui.relicList.innerHTML = "<div class='relic-badge'><strong>Sin reliquias</strong><p>Consigue una cada 6 salas y en bosses.</p></div>";
+    return;
+  }
+  ui.relicList.innerHTML = state.relics.map((id) => {
+    const r = relicPool.find((x) => x.id === id);
+    if (!r) return "";
+    return `<div class="relic-badge"><strong>${r.name}</strong><p>${r.desc}</p></div>`;
+  }).join("");
+}
+
+function renderCards() {
+  if (!state.cards.length) {
+    ui.cardList.innerHTML = "<div class='card-badge'><strong>Sin cartas</strong><p>Recibe draft de cartas cada 12 salas.</p></div>";
+    return;
+  }
+  ui.cardList.innerHTML = state.cards.map((id) => {
+    const c = cardPool.find((x) => x.id === id);
+    if (!c) return "";
+    return `<div class="card-badge"><strong>${c.name}</strong><p>${c.desc}</p></div>`;
+  }).join("");
+}
+
+function renderQuests() {
+  ui.questList.innerHTML = Object.entries(questDefs).map(([id, q]) => {
+    const s = state.quests[id];
+    const done = s.progress >= q.goal;
+    return `
+      <article class="item">
+        <div>
+          <h4>${q.title}</h4>
+          <p>${q.text}</p>
+          <p>${s.progress} / ${q.goal}</p>
+          <span class="badge quest">${q.reward}</span>
+        </div>
+        <button type="button" class="buy-btn" data-quest-claim="${id}" ${done && !s.claimed ? "" : "disabled"}>${s.claimed ? "Cobrada" : "Cobrar"}</button>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderLive() {
+  const tap = tapDamage();
+  const dps = dpsDamage();
+
+  ui.runStatus.textContent = `Sala ${state.room} | Prestige ${state.prestige}`;
   ui.gold.textContent = num(state.gold);
   ui.tapDamage.textContent = num(tap);
   ui.dps.textContent = num(dps);
   ui.shards.textContent = num(state.shards);
-  ui.prestige.textContent = num(state.prestige);
-  ui.relicCount.textContent = state.ownedRelicIds.length;
-  ui.comboValue.textContent = `x${currentComboMult().toFixed(2)}`;
-  ui.bossCount.textContent = num(state.bossesKilled);
-  ui.cardCount.textContent = num(state.ownedCardIds.length);
+  ui.combo.textContent = `x${comboMult().toFixed(2)}`;
+  ui.critChance.textContent = `${(critChance() * 100).toFixed(1)}%`;
+  ui.bosses.textContent = num(state.bossesKilled);
+  ui.cards.textContent = num(state.cards.length);
 
-  ui.damagePreview.textContent = `+${num(tap)}`;
-  ui.stageLabel.textContent = state.enemy.isBoss ? `BOSS ${state.room}` : `Sala ${state.room}`;
-  ui.hpText.textContent = `${num(state.enemy.hp)} / ${num(state.enemy.maxHp)}${state.enemy.shield > 0 ? ` | Escudo ${num(state.enemy.shield)}` : ""}`;
+  ui.enemyName.textContent = state.enemy.name;
+  ui.stage.textContent = state.enemy.isBoss ? `Boss ${state.room}` : `Sala ${state.room}`;
+  ui.enemyMeta.textContent = state.enemy.isBoss
+    ? "Jefe: gran recompensa"
+    : state.enemy.isElite
+      ? "Elite: escudo activo"
+      : (state.enemy.modId ? `[${enemyMods[state.enemy.modId].name}] ${enemyMods[state.enemy.modId].desc}` : "Normal");
 
   const hpPct = (state.enemy.hp / state.enemy.maxHp) * 100;
   ui.hpBar.style.width = `${Math.max(0, hpPct)}%`;
+  ui.hpText.textContent = `${num(state.enemy.hp)} / ${num(state.enemy.maxHp)}${state.enemy.shield > 0 ? ` | Escudo ${num(state.enemy.shield)}` : ""}`;
 
-  const overPct = state.overdriveTime > 0 ? 100 : Math.min(100, state.overdriveCharge);
-  ui.overdriveBar.style.width = `${overPct}%`;
-  ui.overdriveText.textContent = state.overdriveTime > 0 ? `Overdrive activo ${state.overdriveTime.toFixed(1)}s` : `Overdrive ${Math.floor(state.overdriveCharge)}%`;
+  const oPct = state.overdriveTime > 0 ? 100 : Math.min(100, state.overdriveCharge);
+  ui.overdriveBar.style.width = `${oPct}%`;
+  ui.overdriveText.textContent = state.overdriveTime > 0
+    ? `Overdrive activo ${state.overdriveTime.toFixed(1)}s`
+    : `Overdrive ${Math.floor(state.overdriveCharge)}%`;
 
-  ui.enemyName.textContent = `Enemigo: ${state.enemy.name}`;
-  if (state.enemy.modId) {
-    const mod = enemyMods[state.enemy.modId];
-    ui.enemyMods.textContent = `[${mod.name}] ${mod.desc}`;
+  ui.attackPreview.textContent = `+${num(tap)}`;
+  if (state.furyCd <= 0) {
+    ui.furyBtn.disabled = false;
+    ui.furyText.textContent = "Lista";
   } else {
-    ui.enemyMods.textContent = state.enemy.isBoss ? "Enemigo jefe: recompensa especial" : (state.enemy.isElite ? "Enemigo elite: tiene escudo" : "");
-  }
-
-  if (state.furyCooldown <= 0) {
-    ui.skillBtn.disabled = false;
-    ui.skillText.textContent = "Lista";
-  } else {
-    ui.skillBtn.disabled = true;
-    ui.skillText.textContent = `${state.furyCooldown.toFixed(1)}s`;
-  }
-
-  ui.runInfo.textContent = `Crit ${(critChance * 100).toFixed(1)}% | Combo ${state.comboCount} | Sala ${state.room}`;
-  ui.prestigeBar.textContent = `Prestige ${state.prestige} | Kills totales ${state.totalKills}`;
-
-  if (full) {
-    drawShop();
-    drawMetaShop();
-    drawQuests();
-    drawCards();
-    drawActiveRelics();
+    ui.furyBtn.disabled = true;
+    ui.furyText.textContent = `${state.furyCd.toFixed(1)}s`;
   }
 }
 
-function tick(dt) {
-  const dps = currentDps();
-  if (dps > 0) damageEnemy(dps * dt, "DPS");
-
-  if (state.enemy.modId && enemyMods[state.enemy.modId].regen) {
-    state.enemy.hp += state.enemy.maxHp * enemyMods[state.enemy.modId].regen * dt;
-    if (state.enemy.hp > state.enemy.maxHp) state.enemy.hp = state.enemy.maxHp;
-  }
-
-  state.comboTimer -= dt;
-  if (state.comboTimer <= 0 && state.comboCount > 0) {
-    state.comboCount = Math.max(0, state.comboCount - 1);
-    state.comboTimer = 0.24;
-  }
-
-  if (state.furyCooldown > 0) state.furyCooldown -= dt;
-  if (state.furyCooldown < 0) state.furyCooldown = 0;
-
-  if (state.overdriveTime > 0) state.overdriveTime -= dt;
-  if (state.overdriveTime < 0) state.overdriveTime = 0;
-
-  render(false);
+function renderAll() {
+  applyQuestProgress();
+  renderPanelTabs();
+  renderShop();
+  renderMeta();
+  renderRelics();
+  renderCards();
+  renderQuests();
+  renderLive();
 }
 
-function bindTap(button, handler) {
-  let locked = false;
-  button.addEventListener("pointerdown", (e) => {
+function flash(text) {
+  ui.combatLog.textContent = text;
+  clearTimeout(flash._t);
+  flash._t = setTimeout(() => {
+    ui.combatLog.textContent = "";
+  }, 1600);
+}
+
+function hardResetRun() {
+  state.prestige += Math.floor(state.totalKills / 55);
+  state.room = 1;
+  state.kills = 0;
+  state.crits = 0;
+  state.combo = 0;
+  state.comboTimer = 0;
+  state.furyCd = 0;
+  state.overdriveCharge = 0;
+  state.overdriveTime = 0;
+  state.tapBase = 1;
+  state.dpsBase = 0;
+  state.run = { blade: 0, familiar: 0, greed: 0, mirror: 0, rune: 0 };
+  state.relics = [];
+  state.cards = [];
+  state.multipliers = {
+    tap: 1,
+    dps: 1,
+    critChance: 0,
+    critMult: 1.7,
+    gold: 1,
+    enemyHp: 1,
+    shieldBreak: 1,
+    overdrive: 1,
+    shardChance: 0,
+  };
+  state.quests = {
+    kills30: { progress: 0, claimed: false },
+    room25: { progress: 0, claimed: false },
+    crit20: { progress: 0, claimed: false },
+    boss3: { progress: 0, claimed: false },
+  };
+  spawnEnemy();
+  renderAll();
+  save();
+}
+
+function setupInteractions() {
+  ui.attackBtn.addEventListener("pointerup", (e) => {
     e.preventDefault();
-    if (locked) return;
-    locked = true;
-    handler();
-    setTimeout(() => { locked = false; }, 30);
+    normalHit();
   });
-}
 
-function setupEvents() {
-  bindTap(ui.attackBtn, attackTap);
-  bindTap(ui.skillBtn, useFury);
+  ui.furyBtn.addEventListener("pointerup", (e) => {
+    e.preventDefault();
+    furyHit();
+  });
 
-  // Prevent iOS double-tap zoom and gesture zoom.
+  ui.tabs.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.activePanel = btn.dataset.tab;
+      renderPanelTabs();
+    });
+  });
+
+  ui.shopList.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-run-buy]");
+    if (!btn) return;
+    buyRunUpgrade(btn.dataset.runBuy);
+  });
+
+  ui.metaList.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-meta-buy]");
+    if (!btn) return;
+    buyMetaUpgrade(btn.dataset.metaBuy);
+  });
+
+  ui.questList.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-quest-claim]");
+    if (!btn) return;
+    claimQuest(btn.dataset.questClaim);
+  });
+
+  ui.menuBtn.addEventListener("click", () => {
+    if (!ui.menuDialog.open) ui.menuDialog.showModal();
+  });
+
+  ui.newRunBtn.addEventListener("click", () => {
+    ui.menuDialog.close();
+    hardResetRun();
+    flash("Nueva run iniciada");
+  });
+
+  ui.forceCardBtn.addEventListener("click", () => {
+    ui.menuDialog.close();
+    openCardDraft();
+  });
+
+  ui.forceRelicBtn.addEventListener("click", () => {
+    ui.menuDialog.close();
+    openRelicDraft();
+  });
+
+  // Block iOS double-tap zoom and pinch.
   let lastTouchEnd = 0;
   document.addEventListener("touchend", (event) => {
     const now = Date.now();
-    if (now - lastTouchEnd < 280) {
-      event.preventDefault();
-    }
+    if (now - lastTouchEnd < 280) event.preventDefault();
     lastTouchEnd = now;
   }, { passive: false });
 
   document.addEventListener("gesturestart", (event) => {
     event.preventDefault();
   }, { passive: false });
+}
 
-  ui.resetRunBtn.addEventListener("click", () => {
-    if (confirm("Reiniciar run. Mantienes esencias y mejoras permanentes.")) {
-      resetRun();
-      flash("Nueva run iniciada");
+function loopStart() {
+  let last = performance.now();
+  setInterval(() => save(), 3000);
+
+  function frame(now) {
+    const dt = Math.min(0.2, (now - last) / 1000);
+    last = now;
+
+    if (dpsDamage() > 0) applyDamage(dpsDamage() * dt, "DPS");
+
+    if (state.enemy.modId === "regen") {
+      state.enemy.hp += state.enemy.maxHp * (enemyMods.regen.regen || 0) * dt;
+      if (state.enemy.hp > state.enemy.maxHp) state.enemy.hp = state.enemy.maxHp;
     }
-  });
 
-  document.querySelectorAll(".tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-content").forEach((tab) => tab.classList.remove("active"));
-      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-      const tabName = btn.dataset.tab;
-      document.querySelector(`.tab-content[data-tab="${tabName}"]`).classList.add("active");
-      btn.classList.add("active");
-    });
-  });
+    state.comboTimer -= dt;
+    if (state.comboTimer <= 0 && state.combo > 0) {
+      state.combo -= 1;
+      state.comboTimer = 0.24;
+    }
+
+    if (state.furyCd > 0) state.furyCd -= dt;
+    if (state.furyCd < 0) state.furyCd = 0;
+
+    if (state.overdriveTime > 0) state.overdriveTime -= dt;
+    if (state.overdriveTime < 0) state.overdriveTime = 0;
+
+    renderLive();
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
 }
 
 function start() {
-  loadSave();
+  load();
   if (!state.enemy.hp || state.enemy.hp <= 0) spawnEnemy();
-  applyQuestProgress();
-  setupEvents();
-  render();
+  setupInteractions();
+  renderAll();
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./service-worker.js").catch(() => {});
   }
 
-  let last = performance.now();
-  setInterval(() => save(), 3000);
-
-  function loop(now) {
-    const dt = Math.min(0.2, (now - last) / 1000);
-    last = now;
-    tick(dt);
-    requestAnimationFrame(loop);
-  }
-
-  requestAnimationFrame(loop);
+  loopStart();
 }
 
 start();
