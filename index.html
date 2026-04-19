@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0e16" />
+  <meta name="theme-color" content="#0c111b" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Arcana Tap" />
@@ -12,140 +12,96 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app-bg"></div>
-  <main class="app">
+  <div class="bg"></div>
+
+  <main class="app-shell">
     <header class="topbar">
       <div>
         <h1>Arcana Tap</h1>
-        <p class="prestige-bar" id="prestigeBar"></p>
+        <p id="runStatus" class="subtitle">Run 1</p>
       </div>
-      <button id="resetRunBtn" class="btn-reset">⟲</button>
+      <button id="menuBtn" class="icon-btn" type="button" aria-label="Abrir menu">☰</button>
     </header>
 
-    <section class="stats-grid">
-      <article class="stat-card">
-        <p>Oro</p>
-        <strong id="gold">0</strong>
-      </article>
-      <article class="stat-card">
-        <p>Golpe</p>
-        <strong id="tapDamage">1</strong>
-      </article>
-      <article class="stat-card">
-        <p>DPS</p>
-        <strong id="dps">0</strong>
-      </article>
-      <article class="stat-card">
-        <p>Esencias</p>
-        <strong id="shards">0</strong>
-      </article>
-      <article class="stat-card">
-        <p>Prestige</p>
-        <strong id="prestige">0</strong>
-      </article>
-      <article class="stat-card">
-        <p>Reliquias</p>
-        <strong id="relicCount">0</strong>
-      </article>
-      <article class="stat-card">
-        <p>Combo</p>
-        <strong id="comboValue">x1.0</strong>
-      </article>
-      <article class="stat-card">
-        <p>Bosses</p>
-        <strong id="bossCount">0</strong>
-      </article>
-      <article class="stat-card">
-        <p>Cartas</p>
-        <strong id="cardCount">0</strong>
-      </article>
+    <section class="hud-grid" aria-label="Estadisticas">
+      <article class="hud-card"><span>Oro</span><strong id="gold">0</strong></article>
+      <article class="hud-card"><span>Golpe</span><strong id="tapDamage">1</strong></article>
+      <article class="hud-card"><span>DPS</span><strong id="dps">0</strong></article>
+      <article class="hud-card"><span>Esencias</span><strong id="shards">0</strong></article>
+      <article class="hud-card"><span>Combo</span><strong id="combo">x1.00</strong></article>
+      <article class="hud-card"><span>Crit</span><strong id="critChance">0%</strong></article>
+      <article class="hud-card"><span>Bosses</span><strong id="bosses">0</strong></article>
+      <article class="hud-card"><span>Cartas</span><strong id="cards">0</strong></article>
     </section>
 
-    <section class="enemy-panel">
-      <div class="enemy-headline">
+    <section class="arena">
+      <div class="arena-head">
         <div>
-          <h2 id="enemyName">Enemigo: Slime del Sótano</h2>
-          <p id="enemyMods" class="enemy-mods"></p>
+          <h2 id="enemyName">Slime del Sotano</h2>
+          <p id="enemyMeta" class="enemy-meta">Normal</p>
         </div>
-        <span id="stageLabel" class="stage-label">Sala 1</span>
+        <span id="stage" class="stage-pill">Sala 1</span>
       </div>
-      <div class="hp-wrap">
+
+      <div class="bar-wrap">
         <div id="hpBar" class="hp-bar"></div>
       </div>
-      <p id="hpText" class="hp-text">100 / 100</p>
-      <div class="overdrive-wrap">
+      <p id="hpText" class="bar-text">22 / 22</p>
+
+      <div class="bar-wrap overdrive-wrap">
         <div id="overdriveBar" class="overdrive-bar"></div>
       </div>
-      <p id="overdriveText" class="overdrive-text">Overdrive 0%</p>
-      <div class="action-row">
-        <button id="attackBtn" class="attack-btn">
-          <span class="attack-text">GOLPEAR</span>
-          <span class="attack-sub" id="damagePreview">+1</span>
-        </button>
-        <button id="skillBtn" class="skill-btn">
-          <span>FURIA</span>
-          <span id="skillText">Lista</span>
-        </button>
-      </div>
-      <p id="runInfo" class="run-info"></p>
-      <p id="floatingLog" class="floating-log"></p>
+      <p id="overdriveText" class="bar-text blue">Overdrive 0%</p>
+
+      <p id="combatLog" class="combat-log"></p>
     </section>
 
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="shop">Tienda</button>
-      <button class="tab-btn" data-tab="relics">Reliquias</button>
-      <button class="tab-btn" data-tab="cards">Cartas</button>
-      <button class="tab-btn" data-tab="quests">Misiones</button>
-      <button class="tab-btn" data-tab="meta">Taller</button>
-    </div>
-
-    <section class="tab-content active" data-tab="shop">
-      <h3>Mejoras de Run</h3>
-      <div class="shop-grid" id="shopGrid"></div>
+    <section class="action-row">
+      <button id="attackBtn" type="button" class="action action-main">
+        <span>GOLPEAR</span>
+        <small id="attackPreview">+1</small>
+      </button>
+      <button id="furyBtn" type="button" class="action action-skill">
+        <span>FURIA</span>
+        <small id="furyText">Lista</small>
+      </button>
     </section>
 
-    <section class="tab-content" data-tab="relics">
-      <h3>Reliquias Activas</h3>
-      <div id="activeRelics" class="active-relics"></div>
-    </section>
+    <nav class="tabs" aria-label="Menus">
+      <button type="button" class="tab-btn active" data-tab="shop">Tienda</button>
+      <button type="button" class="tab-btn" data-tab="cards">Cartas</button>
+      <button type="button" class="tab-btn" data-tab="relics">Reliquias</button>
+      <button type="button" class="tab-btn" data-tab="quests">Misiones</button>
+      <button type="button" class="tab-btn" data-tab="meta">Taller</button>
+    </nav>
 
-    <section class="tab-content" data-tab="cards">
-      <h3>Cartas de Build</h3>
-      <div id="cardList" class="shop-grid"></div>
-    </section>
-
-    <section class="tab-content" data-tab="quests">
-      <h3>Misiones de Run</h3>
-      <div id="questList" class="shop-grid"></div>
-    </section>
-
-    <section class="tab-content" data-tab="meta">
-      <h3>Taller Permanente (Esencias)</h3>
-      <div class="shop-grid" id="metaGrid"></div>
+    <section class="panels">
+      <section class="panel active" data-panel="shop"><div id="shopList" class="list"></div></section>
+      <section class="panel" data-panel="cards"><div id="cardList" class="list"></div></section>
+      <section class="panel" data-panel="relics"><div id="relicList" class="list"></div></section>
+      <section class="panel" data-panel="quests"><div id="questList" class="list"></div></section>
+      <section class="panel" data-panel="meta"><div id="metaList" class="list"></div></section>
     </section>
   </main>
 
-  <dialog id="relicDialog" class="relic-dialog">
-    <form method="dialog" class="relic-form">
-      <h3>⭐ Elige 1 Reliquia</h3>
-      <p id="relicSubtitle"></p>
-      <div id="relicChoices" class="relic-choices"></div>
+  <dialog id="menuDialog" class="dialog">
+    <form method="dialog" class="dialog-card">
+      <h3>Menu de Run</h3>
+      <div class="list compact">
+        <button type="button" id="newRunBtn" class="menu-btn">Nueva run (mantiene progreso permanente)</button>
+        <button type="button" id="forceCardBtn" class="menu-btn">Forzar draft de carta</button>
+        <button type="button" id="forceRelicBtn" class="menu-btn">Forzar draft de reliquia</button>
+      </div>
+      <button class="menu-btn close" value="close">Cerrar</button>
     </form>
   </dialog>
 
-  <dialog id="eventDialog" class="event-dialog">
-    <form method="dialog" class="event-form">
-      <h3 id="eventTitle"></h3>
-      <p id="eventDesc"></p>
-      <div id="eventChoices" class="event-choices"></div>
-    </form>
-  </dialog>
-
-  <dialog id="cardDialog" class="event-dialog">
-    <form method="dialog" class="event-form">
-      <h3>Elige 1 Carta</h3>
-      <p id="cardSubtitle"></p>
-      <div id="cardChoices" class="event-choices"></div>
+  <dialog id="draftDialog" class="dialog">
+    <form method="dialog" class="dialog-card">
+      <h3 id="draftTitle">Elige</h3>
+      <p id="draftSubtitle" class="subtitle">Selecciona 1 opcion</p>
+      <div id="draftChoices" class="list compact"></div>
+      <button class="menu-btn close" value="cancel">Cancelar</button>
     </form>
   </dialog>
 
