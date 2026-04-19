@@ -402,7 +402,7 @@ function onEnemyDefeated(source) {
 
 function damageEnemy(amount, source = "Golpe") {
   applyEnemyDamage(amount);
-  render();
+  render(false);
   if (state.enemy.hp <= 0) onEnemyDefeated(source);
 }
 
@@ -738,7 +738,7 @@ function hasRelic(id) {
   return state.ownedRelicIds.includes(id);
 }
 
-function render() {
+function render(full = true) {
   const tap = currentTapDamage();
   const dps = currentDps();
   const critChance = currentCritChance();
@@ -783,11 +783,13 @@ function render() {
   ui.runInfo.textContent = `Crit ${(critChance * 100).toFixed(1)}% | Combo ${state.comboCount} | Sala ${state.room}`;
   ui.prestigeBar.textContent = `Prestige ${state.prestige} | Kills totales ${state.totalKills}`;
 
-  drawShop();
-  drawMetaShop();
-  drawQuests();
-  drawCards();
-  drawActiveRelics();
+  if (full) {
+    drawShop();
+    drawMetaShop();
+    drawQuests();
+    drawCards();
+    drawActiveRelics();
+  }
 }
 
 function tick(dt) {
@@ -811,7 +813,7 @@ function tick(dt) {
   if (state.overdriveTime > 0) state.overdriveTime -= dt;
   if (state.overdriveTime < 0) state.overdriveTime = 0;
 
-  render();
+  render(false);
 }
 
 function bindTap(button, handler) {
@@ -828,6 +830,20 @@ function bindTap(button, handler) {
 function setupEvents() {
   bindTap(ui.attackBtn, attackTap);
   bindTap(ui.skillBtn, useFury);
+
+  // Prevent iOS double-tap zoom and gesture zoom.
+  let lastTouchEnd = 0;
+  document.addEventListener("touchend", (event) => {
+    const now = Date.now();
+    if (now - lastTouchEnd < 280) {
+      event.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, { passive: false });
+
+  document.addEventListener("gesturestart", (event) => {
+    event.preventDefault();
+  }, { passive: false });
 
   ui.resetRunBtn.addEventListener("click", () => {
     if (confirm("Reiniciar run. Mantienes esencias y mejoras permanentes.")) {
