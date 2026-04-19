@@ -32,6 +32,11 @@ body {
 body {
   overflow-x: hidden;
   line-height: 1.4;
+  touch-action: manipulation;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
 }
 
 .app-bg {
@@ -341,6 +346,7 @@ h3 {
   cursor: pointer;
   transition: all 200ms ease;
   font-size: 0.85rem;
+  min-height: 44px;
 }
 
 .tab-btn.active {
