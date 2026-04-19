@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#101522" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Arcana Tap" />
+  <title>Arcana Tap</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-bg"></div>
+  <main class="app">
+    <header class="topbar">
+      <h1>Arcana Tap</h1>
+      <button id="resetRunBtn" class="ghost">Nueva Run</button>
+    </header>
+
+    <section class="stats-grid">
+      <article class="stat-card">
+        <p>Oro</p>
+        <strong id="gold">0</strong>
+      </article>
+      <article class="stat-card">
+        <p>Daño por toque</p>
+        <strong id="tapDamage">1</strong>
+      </article>
+      <article class="stat-card">
+        <p>DPS</p>
+        <strong id="dps">0</strong>
+      </article>
+      <article class="stat-card">
+        <p>Fragmentos</p>
+        <strong id="shards">0</strong>
+      </article>
+    </section>
+
+    <section class="enemy-panel">
+      <div class="enemy-headline">
+        <h2 id="enemyName">Enemigo: Slime del Sótano</h2>
+        <span id="stageLabel">Sala 1</span>
+      </div>
+      <div class="hp-wrap">
+        <div id="hpBar" class="hp-bar"></div>
+      </div>
+      <p id="hpText" class="hp-text">100 / 100</p>
+      <button id="attackBtn" class="attack-btn">TOCAR PARA ATACAR</button>
+      <p id="floatingLog" class="floating-log"></p>
+    </section>
+
+    <section class="shop">
+      <h3>Tienda del Run</h3>
+      <div class="shop-grid" id="shopGrid"></div>
+    </section>
+
+    <section class="meta">
+      <h3>Taller Permanente</h3>
+      <div class="shop-grid" id="metaGrid"></div>
+    </section>
+  </main>
+
+  <dialog id="relicDialog" class="relic-dialog">
+    <form method="dialog" class="relic-form">
+      <h3>Elige 1 reliquia</h3>
+      <p>Como en un roguelite: bonus potente para esta run.</p>
+      <div id="relicChoices" class="relic-choices"></div>
+    </form>
+  </dialog>
+
+  <script src="script.js" defer></script>
+</body>
+</html>

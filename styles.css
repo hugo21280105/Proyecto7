@@ -1,0 +1,252 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;600;700&display=swap');
+
+:root {
+  --bg-1: #101522;
+  --bg-2: #141f2d;
+  --card: rgba(255, 255, 255, 0.08);
+  --card-border: rgba(255, 255, 255, 0.2);
+  --text: #f5f7ff;
+  --muted: #b9c4d1;
+  --accent: #ffb100;
+  --accent-2: #00c2a8;
+  --danger: #ff5b4d;
+  --good: #65d76d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  background: radial-gradient(circle at 20% 10%, #1d2c42 0%, var(--bg-1) 40%, #0b0f17 100%);
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.app-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(600px 200px at 80% 90%, rgba(0, 194, 168, 0.13), transparent),
+    radial-gradient(500px 240px at 15% 75%, rgba(255, 177, 0, 0.1), transparent);
+  filter: blur(6px);
+}
+
+.app {
+  position: relative;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: calc(14px + env(safe-area-inset-top)) 14px calc(16px + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 14px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.05em;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+.ghost,
+.attack-btn,
+.buy-btn,
+.relic-btn {
+  border: 0;
+  border-radius: 12px;
+  color: var(--text);
+  font: inherit;
+}
+
+.ghost {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--card-border);
+  padding: 8px 12px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.stat-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.stat-card strong {
+  font-size: 1.1rem;
+}
+
+.enemy-panel,
+.shop,
+.meta {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.enemy-headline {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+#stageLabel {
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.hp-wrap {
+  margin-top: 8px;
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.hp-bar {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, var(--danger), #ff8b55);
+  transition: width 120ms linear;
+}
+
+.hp-text {
+  margin: 8px 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.attack-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(130deg, var(--accent), #f97316);
+  color: #111;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transform: translateY(0);
+  transition: transform 80ms ease, filter 180ms ease;
+  touch-action: manipulation;
+}
+
+.attack-btn:active {
+  transform: translateY(2px) scale(0.99);
+  filter: brightness(0.95);
+}
+
+.floating-log {
+  min-height: 1.2em;
+  margin: 8px 0 0;
+  color: var(--accent-2);
+  font-size: 0.9rem;
+}
+
+.shop-grid {
+  margin-top: 8px;
+  display: grid;
+  gap: 8px;
+}
+
+.item {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.item h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.item p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.buy-btn,
+.relic-btn {
+  background: var(--accent-2);
+  color: #05211e;
+  font-weight: 700;
+  padding: 8px 10px;
+}
+
+.buy-btn[disabled] {
+  opacity: 0.45;
+}
+
+.relic-dialog {
+  width: min(640px, calc(100% - 18px));
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  color: var(--text);
+  background: #111926;
+}
+
+.relic-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.relic-form p {
+  margin: 4px 0 10px;
+  color: var(--muted);
+}
+
+.relic-choices {
+  display: grid;
+  gap: 8px;
+}
+
+.relic-btn {
+  text-align: left;
+  border-radius: 10px;
+}
+
+@media (min-width: 680px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

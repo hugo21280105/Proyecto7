@@ -1,0 +1,17 @@
+{
+  "name": "Arcana Tap",
+  "short_name": "ArcanaTap",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#101522",
+  "theme_color": "#101522",
+  "description": "Clicker roguelite para iPhone sin Unity",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
