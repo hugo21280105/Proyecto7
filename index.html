@@ -47,6 +47,14 @@
         <p>Reliquias</p>
         <strong id="relicCount">0</strong>
       </article>
+      <article class="stat-card">
+        <p>Combo</p>
+        <strong id="comboValue">x1.0</strong>
+      </article>
+      <article class="stat-card">
+        <p>Bosses</p>
+        <strong id="bossCount">0</strong>
+      </article>
     </section>
 
     <section class="enemy-panel">
@@ -61,16 +69,24 @@
         <div id="hpBar" class="hp-bar"></div>
       </div>
       <p id="hpText" class="hp-text">100 / 100</p>
-      <button id="attackBtn" class="attack-btn">
-        <span class="attack-text">GOLPEAR</span>
-        <span class="attack-sub" id="damagePreview">+1</span>
-      </button>
+      <div class="action-row">
+        <button id="attackBtn" class="attack-btn">
+          <span class="attack-text">GOLPEAR</span>
+          <span class="attack-sub" id="damagePreview">+1</span>
+        </button>
+        <button id="skillBtn" class="skill-btn">
+          <span>FURIA</span>
+          <span id="skillText">Lista</span>
+        </button>
+      </div>
+      <p id="runInfo" class="run-info"></p>
       <p id="floatingLog" class="floating-log"></p>
     </section>
 
     <div class="tabs">
       <button class="tab-btn active" data-tab="shop">Tienda</button>
       <button class="tab-btn" data-tab="relics">Reliquias</button>
+      <button class="tab-btn" data-tab="quests">Misiones</button>
       <button class="tab-btn" data-tab="meta">Taller</button>
     </div>
 
@@ -82,6 +98,11 @@
     <section class="tab-content" data-tab="relics">
       <h3>Reliquias Activas</h3>
       <div id="activeRelics" class="active-relics"></div>
+    </section>
+
+    <section class="tab-content" data-tab="quests">
+      <h3>Misiones de Run</h3>
+      <div id="questList" class="shop-grid"></div>
     </section>
 
     <section class="tab-content" data-tab="meta">
