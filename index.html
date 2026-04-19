@@ -55,6 +55,10 @@
         <p>Bosses</p>
         <strong id="bossCount">0</strong>
       </article>
+      <article class="stat-card">
+        <p>Cartas</p>
+        <strong id="cardCount">0</strong>
+      </article>
     </section>
 
     <section class="enemy-panel">
@@ -69,6 +73,10 @@
         <div id="hpBar" class="hp-bar"></div>
       </div>
       <p id="hpText" class="hp-text">100 / 100</p>
+      <div class="overdrive-wrap">
+        <div id="overdriveBar" class="overdrive-bar"></div>
+      </div>
+      <p id="overdriveText" class="overdrive-text">Overdrive 0%</p>
       <div class="action-row">
         <button id="attackBtn" class="attack-btn">
           <span class="attack-text">GOLPEAR</span>
@@ -86,6 +94,7 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="shop">Tienda</button>
       <button class="tab-btn" data-tab="relics">Reliquias</button>
+      <button class="tab-btn" data-tab="cards">Cartas</button>
       <button class="tab-btn" data-tab="quests">Misiones</button>
       <button class="tab-btn" data-tab="meta">Taller</button>
     </div>
@@ -98,6 +107,11 @@
     <section class="tab-content" data-tab="relics">
       <h3>Reliquias Activas</h3>
       <div id="activeRelics" class="active-relics"></div>
+    </section>
+
+    <section class="tab-content" data-tab="cards">
+      <h3>Cartas de Build</h3>
+      <div id="cardList" class="shop-grid"></div>
     </section>
 
     <section class="tab-content" data-tab="quests">
@@ -124,6 +138,14 @@
       <h3 id="eventTitle"></h3>
       <p id="eventDesc"></p>
       <div id="eventChoices" class="event-choices"></div>
+    </form>
+  </dialog>
+
+  <dialog id="cardDialog" class="event-dialog">
+    <form method="dialog" class="event-form">
+      <h3>Elige 1 Carta</h3>
+      <p id="cardSubtitle"></p>
+      <div id="cardChoices" class="event-choices"></div>
     </form>
   </dialog>
 
